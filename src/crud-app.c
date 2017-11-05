@@ -39,18 +39,7 @@ crud_app_startup(GApplication *self)
 
   G_APPLICATION_CLASS(crud_app_parent_class)->startup(self);
 
-  builder = gtk_builder_new_from_string(
-    "<interface>"
-    " <menu id='app-menu'>"
-    "   <section>"
-    "     <item>"
-    "       <attribute name='label'>_Quit</attribute>"
-    "       <attribute name='action'>app.quit</attribute>"
-    "     </item>"
-    "   </section>"
-    " </menu>"
-    "</interface>",
-    -1);
+  builder = gtk_builder_new_from_resource("/com/yami/crudapp/menu.ui");
   app_menu = G_MENU_MODEL(gtk_builder_get_object(builder, "app-menu"));
 
   action = g_simple_action_new("quit", NULL);
