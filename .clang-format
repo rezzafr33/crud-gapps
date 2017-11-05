@@ -1,0 +1,9 @@
+BasedOnStyle: Mozilla
+IndentWidth: 2
+BinPackParameters: false
+BinPackArguments: true
+AlignAfterOpenBracket: true
+PenaltyBreakBeforeFirstCallParameter: 100
+PointerAlignment: Right
+SpaceAfterCStyleCast: true
+BreakBeforeBinaryOperators: All
