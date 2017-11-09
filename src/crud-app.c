@@ -1,3 +1,4 @@
+#include "crud-app-win.h"
 #include "crud-app.h"
 
 struct _CrudApp
@@ -15,8 +16,8 @@ crud_app_init(CrudApp *self)
 static void
 crud_app_activate(GApplication *self)
 {
-  GtkWidget *win;
-  win = gtk_application_window_new(GTK_APPLICATION(self));
+  CrudAppWindow *win;
+  win = crud_app_window_new(CRUD_APP(self));
 
   gtk_window_present(GTK_WINDOW(win));
 }

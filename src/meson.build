@@ -4,6 +4,7 @@ resources = gnome.compile_resources('crud-app_resources',
 
 sources = [
   'crud-app.c',
+  'crud-app-win.c',
   'main.c',
 ]
 
