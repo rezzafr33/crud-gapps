@@ -28,9 +28,6 @@ static GParamSpec *properties[N_PROPERTIES] = {
 };
 
 static void
-crud_app_dialog_constructed(GObject *obj);
-
-static void
 crud_app_dialog_set_property(GObject *obj,
                              guint prop_id,
                              const GValue *value,
@@ -50,55 +47,16 @@ G_DEFINE_TYPE_WITH_PRIVATE(CrudAppDialog, crud_app_dialog, GTK_TYPE_DIALOG)
 static void
 crud_app_dialog_init(CrudAppDialog *self)
 {
-}
-
-static void
-crud_app_dialog_class_init(CrudAppDialogClass *klass)
-{
-  GObjectClass *oclass = G_OBJECT_CLASS(klass);
-  G_OBJECT_CLASS(klass)->set_property = crud_app_dialog_set_property;
-  G_OBJECT_CLASS(klass)->get_property = crud_app_dialog_get_property;
-  G_OBJECT_CLASS(klass)->constructed = crud_app_dialog_constructed;
-
-  properties[PROP_NAME]
-    = g_param_spec_string("entry-name", "Entry Name", "Name of software", NULL,
-                          G_PARAM_READWRITE);
-
-  properties[PROP_YEAR]
-    = g_param_spec_uint("entry-year", "Entry Year", "Year Released", 0, 9999, 0,
-                        G_PARAM_READWRITE);
-
-  properties[PROP_LANGUAGE]
-    = g_param_spec_string("entry-language", "Entry Language", "Year Released",
-                          NULL, G_PARAM_READWRITE);
-
-  g_object_class_install_properties(oclass, N_PROPERTIES, properties);
-}
-
-CrudAppDialog *
-crud_app_dialog_new(CrudAppWindow *win)
-{
-  return g_object_new(CRUD_TYPE_APP_DIALOG, "transient-for", win,
-                      "use-header-bar", TRUE, "modal", TRUE, NULL);
-}
-
-static void
-crud_app_dialog_constructed(GObject *obj)
-{
   GtkWidget *content_area, *grid, *label;
-  CrudAppDialog *dialog;
   CrudAppDialogPrivate *priv;
 
-  G_OBJECT_CLASS(crud_app_dialog_parent_class)->constructed(obj);
+  gtk_dialog_add_button(GTK_DIALOG(self), "_OK", GTK_RESPONSE_OK);
+  gtk_dialog_add_button(GTK_DIALOG(self), "_Cancel", GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(self), GTK_RESPONSE_OK);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(self), GTK_RESPONSE_OK, FALSE);
 
-  dialog = CRUD_APP_DIALOG(obj);
-  gtk_dialog_add_button(GTK_DIALOG(dialog), "_OK", GTK_RESPONSE_OK);
-  gtk_dialog_add_button(GTK_DIALOG(dialog), "_Cancel", GTK_RESPONSE_CANCEL);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK, FALSE);
-
-  priv = crud_app_dialog_get_instance_private(dialog);
-  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  priv = crud_app_dialog_get_instance_private(self);
+  content_area = gtk_dialog_get_content_area(GTK_DIALOG(self));
 
   grid = gtk_grid_new();
 
@@ -129,13 +87,43 @@ crud_app_dialog_constructed(GObject *obj)
   gtk_widget_set_visible(label, TRUE);
   gtk_widget_set_visible(priv->language, TRUE);
 
-  g_signal_connect(priv->name, "changed", G_CALLBACK(on_entry_changed), dialog);
-  g_signal_connect(priv->year, "changed", G_CALLBACK(on_entry_changed), dialog);
+  g_signal_connect(priv->name, "changed", G_CALLBACK(on_entry_changed), self);
+  g_signal_connect(priv->year, "changed", G_CALLBACK(on_entry_changed), self);
   g_signal_connect(priv->language, "changed", G_CALLBACK(on_entry_changed),
-                   dialog);
+                   self);
 
   gtk_container_add(GTK_CONTAINER(content_area), grid);
   gtk_widget_set_visible(grid, TRUE);
+}
+
+static void
+crud_app_dialog_class_init(CrudAppDialogClass *klass)
+{
+  GObjectClass *oclass = G_OBJECT_CLASS(klass);
+  G_OBJECT_CLASS(klass)->set_property = crud_app_dialog_set_property;
+  G_OBJECT_CLASS(klass)->get_property = crud_app_dialog_get_property;
+  // G_OBJECT_CLASS(klass)->constructed = crud_app_dialog_constructed;
+
+  properties[PROP_NAME]
+    = g_param_spec_string("entry-name", "Entry Name", "Name of software", NULL,
+                          G_PARAM_READWRITE);
+
+  properties[PROP_YEAR]
+    = g_param_spec_uint("entry-year", "Entry Year", "Year Released", 0, 9999, 0,
+                        G_PARAM_READWRITE);
+
+  properties[PROP_LANGUAGE]
+    = g_param_spec_string("entry-language", "Entry Language", "Year Released",
+                          NULL, G_PARAM_READWRITE);
+
+  g_object_class_install_properties(oclass, N_PROPERTIES, properties);
+}
+
+CrudAppDialog *
+crud_app_dialog_new(CrudAppWindow *win)
+{
+  return g_object_new(CRUD_TYPE_APP_DIALOG, "transient-for", win,
+                      "use-header-bar", TRUE, "modal", TRUE, NULL);
 }
 
 static void

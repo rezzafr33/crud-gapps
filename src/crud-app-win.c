@@ -22,9 +22,6 @@ static gchar *columns[N_COLUMNS]
   = { "id", "Software", "Release Year", "Programming Language" };
 
 static void
-crud_app_window_constructed(GObject *obj);
-
-static void
 init_treeview(GtkWidget *treeview);
 
 static void
@@ -34,9 +31,6 @@ add_to_list(GtkWidget *treeview,
             guint year,
             gchar *lang);
 
-static void
-crud_app_window_constructed(GObject *self);
-
 G_DEFINE_TYPE_WITH_PRIVATE(CrudAppWindow,
                            crud_app_window,
                            GTK_TYPE_APPLICATION_WINDOW)
@@ -44,13 +38,66 @@ G_DEFINE_TYPE_WITH_PRIVATE(CrudAppWindow,
 static void
 crud_app_window_init(CrudAppWindow *self)
 {
+  GtkWidget *grid;
+  GtkWidget *sw;
+  CrudAppWindowPrivate *priv;
+
+  priv = crud_app_window_get_instance_private(CRUD_APP_WINDOW(self));
+
+  gtk_window_set_title(GTK_WINDOW(self), "GApps CRUD");
+  gtk_window_set_default_size(GTK_WINDOW(self), 350, 150);
+  gtk_container_set_border_width(GTK_CONTAINER(self), 10);
+
+  grid = gtk_grid_new();
+  gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+  gtk_grid_set_row_homogeneous(GTK_GRID(grid), TRUE);
+  gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
+  gtk_widget_set_visible(grid, TRUE);
+
+  sw = gtk_scrolled_window_new(NULL, NULL);
+  gtk_widget_set_vexpand(sw, TRUE);
+  gtk_widget_set_visible(sw, TRUE);
+
+  priv->view = gtk_tree_view_new();
+  init_treeview(priv->view);
+
+  add_to_list(priv->view, 1, "Firefox", 2002, "C++");
+  add_to_list(priv->view, 2, "Chrome", 2008, "C++");
+
+  gtk_container_add(GTK_CONTAINER(sw), priv->view);
+  gtk_grid_attach(GTK_GRID(grid), sw, 0, 0, 8, 10);
+  gtk_widget_set_visible(priv->view, TRUE);
+
+  priv->button_add = gtk_button_new_with_mnemonic("_Add");
+  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_add, sw, GTK_POS_BOTTOM,
+                          2, 1);
+  gtk_widget_set_visible(priv->button_add, TRUE);
+  g_signal_connect_swapped(priv->button_add, "clicked",
+                           G_CALLBACK(crud_app_window_add_button_clicked),
+                           self);
+
+  priv->button_delete = gtk_button_new_with_mnemonic("_Delete");
+  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_delete, priv->button_add,
+                          GTK_POS_RIGHT, 2, 1);
+  gtk_widget_set_visible(priv->button_delete, TRUE);
+  g_signal_connect_swapped(priv->button_delete, "clicked",
+                           G_CALLBACK(crud_app_window_delete_button_clicked),
+                           self);
+
+  priv->button_edit = gtk_button_new_with_mnemonic("_Edit");
+  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_edit,
+                          priv->button_delete, GTK_POS_RIGHT, 2, 1);
+  gtk_widget_set_visible(priv->button_edit, TRUE);
+  g_signal_connect_swapped(priv->button_edit, "clicked",
+                           G_CALLBACK(crud_app_window_edit_button_clicked),
+                           self);
+
+  gtk_container_add(GTK_CONTAINER(self), grid);
 }
 
 static void
 crud_app_window_class_init(CrudAppWindowClass *klass)
 {
-  G_OBJECT_CLASS(klass)->constructed = crud_app_window_constructed;
-
   signals[ADD_BUTTON_CLICKED] = g_signal_new(
     "add_button_clicked", G_TYPE_FROM_CLASS(klass),
     G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
@@ -166,66 +213,4 @@ init_treeview(GtkWidget *treeview)
   gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(store));
 
   g_object_unref(store);
-}
-
-static void
-crud_app_window_constructed(GObject *self)
-{
-  GtkWidget *grid;
-  GtkWidget *sw;
-  CrudAppWindowPrivate *priv;
-
-  G_OBJECT_CLASS(crud_app_window_parent_class)->constructed(self);
-
-  priv = crud_app_window_get_instance_private(CRUD_APP_WINDOW(self));
-
-  gtk_window_set_title(GTK_WINDOW(self), "GApps CRUD");
-  gtk_window_set_default_size(GTK_WINDOW(self), 350, 150);
-  gtk_container_set_border_width(GTK_CONTAINER(self), 10);
-
-  grid = gtk_grid_new();
-  gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
-  gtk_grid_set_row_homogeneous(GTK_GRID(grid), TRUE);
-  gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
-  gtk_widget_set_visible(grid, TRUE);
-
-  sw = gtk_scrolled_window_new(NULL, NULL);
-  gtk_widget_set_vexpand(sw, TRUE);
-  gtk_widget_set_visible(sw, TRUE);
-
-  priv->view = gtk_tree_view_new();
-  init_treeview(priv->view);
-
-  add_to_list(priv->view, 1, "Firefox", 2002, "C++");
-  add_to_list(priv->view, 2, "Chrome", 2008, "C++");
-
-  gtk_container_add(GTK_CONTAINER(sw), priv->view);
-  gtk_grid_attach(GTK_GRID(grid), sw, 0, 0, 8, 10);
-  gtk_widget_set_visible(priv->view, TRUE);
-
-  priv->button_add = gtk_button_new_with_mnemonic("_Add");
-  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_add, sw, GTK_POS_BOTTOM,
-                          2, 1);
-  gtk_widget_set_visible(priv->button_add, TRUE);
-  g_signal_connect_swapped(priv->button_add, "clicked",
-                           G_CALLBACK(crud_app_window_add_button_clicked),
-                           self);
-
-  priv->button_delete = gtk_button_new_with_mnemonic("_Delete");
-  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_delete, priv->button_add,
-                          GTK_POS_RIGHT, 2, 1);
-  gtk_widget_set_visible(priv->button_delete, TRUE);
-  g_signal_connect_swapped(priv->button_delete, "clicked",
-                           G_CALLBACK(crud_app_window_delete_button_clicked),
-                           self);
-
-  priv->button_edit = gtk_button_new_with_mnemonic("_Edit");
-  gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_edit,
-                          priv->button_delete, GTK_POS_RIGHT, 2, 1);
-  gtk_widget_set_visible(priv->button_edit, TRUE);
-  g_signal_connect_swapped(priv->button_edit, "clicked",
-                           G_CALLBACK(crud_app_window_edit_button_clicked),
-                           self);
-
-  gtk_container_add(GTK_CONTAINER(self), grid);
 }
