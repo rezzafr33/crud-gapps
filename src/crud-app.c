@@ -150,10 +150,11 @@ edit_entry(CrudAppWindow *win)
 static void
 delete_entry(CrudAppWindow *win)
 {
-  GtkWidget *view;
+  GtkWidget *view, *dialog;
   GtkTreeIter iter;
   GtkTreeModel *store;
   GtkTreeSelection *selection;
+  gint response;
 
   view = crud_app_window_get_treeview(win);
 
@@ -162,7 +163,20 @@ delete_entry(CrudAppWindow *win)
   if (!gtk_tree_selection_get_selected(selection, &store, &iter))
     return;
 
-  gtk_list_store_remove(GTK_LIST_STORE(store), &iter);
+  dialog
+    = gtk_message_dialog_new(GTK_WINDOW(win),
+                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT
+                               | GTK_DIALOG_USE_HEADER_BAR,
+                             GTK_MESSAGE_QUESTION, GTK_BUTTONS_OK_CANCEL,
+                             "Are you sure\nto delete this entry?");
+
+  response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+  if (response == GTK_RESPONSE_OK) {
+    gtk_list_store_remove(GTK_LIST_STORE(store), &iter);
+  }
+
+  gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
 static void
