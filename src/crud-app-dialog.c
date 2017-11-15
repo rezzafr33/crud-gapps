@@ -42,6 +42,9 @@ crud_app_dialog_get_property(GObject *obj,
                              GValue *value,
                              GParamSpec *pspec);
 
+static void
+on_entry_changed(GtkEditable *entry, gpointer self);
+
 G_DEFINE_TYPE_WITH_PRIVATE(CrudAppDialog, crud_app_dialog, GTK_TYPE_DIALOG)
 
 static void
@@ -92,6 +95,7 @@ crud_app_dialog_constructed(GObject *obj)
   gtk_dialog_add_button(GTK_DIALOG(dialog), "_OK", GTK_RESPONSE_OK);
   gtk_dialog_add_button(GTK_DIALOG(dialog), "_Cancel", GTK_RESPONSE_CANCEL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK, FALSE);
 
   priv = crud_app_dialog_get_instance_private(dialog);
   content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
@@ -124,6 +128,11 @@ crud_app_dialog_constructed(GObject *obj)
                           1, 1);
   gtk_widget_set_visible(label, TRUE);
   gtk_widget_set_visible(priv->language, TRUE);
+
+  g_signal_connect(priv->name, "changed", G_CALLBACK(on_entry_changed), dialog);
+  g_signal_connect(priv->year, "changed", G_CALLBACK(on_entry_changed), dialog);
+  g_signal_connect(priv->language, "changed", G_CALLBACK(on_entry_changed),
+                   dialog);
 
   gtk_container_add(GTK_CONTAINER(content_area), grid);
   gtk_widget_set_visible(grid, TRUE);
@@ -189,5 +198,26 @@ crud_app_dialog_get_property(GObject *obj,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
       break;
+  }
+}
+
+static void
+on_entry_changed(GtkEditable *entry, gpointer self)
+{
+
+  CrudAppDialog *dialog;
+  CrudAppDialogPrivate *priv;
+
+  dialog = CRUD_APP_DIALOG(self);
+  priv = crud_app_dialog_get_instance_private(dialog);
+
+  if ((gtk_entry_get_text_length(GTK_ENTRY(priv->name)) > 0)
+      && (gtk_entry_get_text_length(GTK_ENTRY(priv->year)) > 0)
+      && (gtk_entry_get_text_length(GTK_ENTRY(priv->language)) > 0)) {
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      TRUE);
+  } else {
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      FALSE);
   }
 }
