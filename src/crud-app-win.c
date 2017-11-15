@@ -1,10 +1,5 @@
 #include "crud-app-win.h"
 
-struct _CrudAppWindow
-{
-  GtkApplicationWindow parent;
-};
-
 typedef struct _CrudAppWindowPrivate CrudAppWindowPrivate;
 
 struct _CrudAppWindowPrivate
@@ -15,6 +10,16 @@ struct _CrudAppWindowPrivate
   GtkWidget *button_delete;
   GtkWidget *button_edit;
 };
+
+struct _CrudAppWindow
+{
+  GtkApplicationWindow parent;
+};
+
+static guint signals[N_SIGNALS];
+
+static gchar *columns[N_COLUMNS]
+  = { "id", "Software", "Release Year", "Programming Language" };
 
 static void
 crud_app_window_constructed(GObject *obj);
@@ -29,21 +34,12 @@ add_to_list(GtkWidget *treeview,
             guint year,
             gchar *lang);
 
+static void
+crud_app_window_constructed(GObject *self);
+
 G_DEFINE_TYPE_WITH_PRIVATE(CrudAppWindow,
                            crud_app_window,
                            GTK_TYPE_APPLICATION_WINDOW)
-
-enum
-{
-  ID,
-  NAME,
-  RELEASE,
-  LANGUAGE,
-  N_COLUMNS,
-};
-
-static gchar *columns[N_COLUMNS]
-  = { "id", "Software", "Release Year", "Programming Language" };
 
 static void
 crud_app_window_init(CrudAppWindow *self)
@@ -54,12 +50,79 @@ static void
 crud_app_window_class_init(CrudAppWindowClass *klass)
 {
   G_OBJECT_CLASS(klass)->constructed = crud_app_window_constructed;
+
+  signals[ADD_BUTTON_CLICKED] = g_signal_new(
+    "add_button_clicked", G_TYPE_FROM_CLASS(klass),
+    G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+    0, // G_STRUCT_OFFSET( CrudAppWindowClass, add_button_clicked ),
+    NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  signals[EDIT_BUTTON_CLICKED] = g_signal_new(
+    "edit_button_clicked", G_TYPE_FROM_CLASS(klass),
+    G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+    0, // G_STRUCT_OFFSET( CrudAppWindowClass, edit_button_clicked ),
+    NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  signals[DELETE_BUTTON_CLICKED] = g_signal_new(
+    "delete_button_clicked", G_TYPE_FROM_CLASS(klass),
+    G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+    0, // G_STRUCT_OFFSET( CrudAppWindowClass, delete_button_clicked ),
+    NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+}
+
+void
+crud_app_window_add_button_clicked(CrudAppWindow *self)
+{
+  g_return_if_fail(CRUD_IS_APP_WINDOW(self));
+
+  g_signal_emit(self, signals[ADD_BUTTON_CLICKED], 0, ADD_BUTTON_CLICKED);
+}
+
+void
+crud_app_window_edit_button_clicked(CrudAppWindow *self)
+{
+  g_return_if_fail(CRUD_IS_APP_WINDOW(self));
+
+  g_signal_emit(self, signals[EDIT_BUTTON_CLICKED], 0, EDIT_BUTTON_CLICKED);
+}
+
+void
+crud_app_window_delete_button_clicked(CrudAppWindow *self)
+{
+  g_return_if_fail(CRUD_IS_APP_WINDOW(self));
+
+  g_signal_emit(self, signals[DELETE_BUTTON_CLICKED], 0, DELETE_BUTTON_CLICKED);
 }
 
 CrudAppWindow *
 crud_app_window_new(CrudApp *app)
 {
   return g_object_new(CRUD_TYPE_APP_WINDOW, "application", app, NULL);
+}
+
+GtkWidget *
+crud_app_window_get_treeview(CrudAppWindow *self)
+{
+  CrudAppWindowPrivate *priv;
+
+  priv = crud_app_window_get_instance_private(self);
+
+  return (GtkWidget *) priv->view;
+}
+
+void
+crud_app_window_add_to_list(CrudAppWindow *self,
+                            guint id,
+                            gchar *name,
+                            guint year,
+                            gchar *lang)
+{
+  g_return_if_fail(CRUD_IS_APP_WINDOW(self));
+
+  CrudAppWindowPrivate *priv;
+  priv = crud_app_window_get_instance_private(self);
+
+  add_to_list(priv->view, id, name, year, lang);
 }
 
 static void
@@ -144,16 +207,25 @@ crud_app_window_constructed(GObject *self)
   gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_add, sw, GTK_POS_BOTTOM,
                           2, 1);
   gtk_widget_set_visible(priv->button_add, TRUE);
+  g_signal_connect_swapped(priv->button_add, "clicked",
+                           G_CALLBACK(crud_app_window_add_button_clicked),
+                           self);
 
   priv->button_delete = gtk_button_new_with_mnemonic("_Delete");
   gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_delete, priv->button_add,
                           GTK_POS_RIGHT, 2, 1);
   gtk_widget_set_visible(priv->button_delete, TRUE);
+  g_signal_connect_swapped(priv->button_delete, "clicked",
+                           G_CALLBACK(crud_app_window_delete_button_clicked),
+                           self);
 
   priv->button_edit = gtk_button_new_with_mnemonic("_Edit");
   gtk_grid_attach_next_to(GTK_GRID(grid), priv->button_edit,
                           priv->button_delete, GTK_POS_RIGHT, 2, 1);
   gtk_widget_set_visible(priv->button_edit, TRUE);
+  g_signal_connect_swapped(priv->button_edit, "clicked",
+                           G_CALLBACK(crud_app_window_edit_button_clicked),
+                           self);
 
   gtk_container_add(GTK_CONTAINER(self), grid);
 }

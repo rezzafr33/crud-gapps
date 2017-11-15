@@ -1,3 +1,4 @@
+#include "crud-app-dialog.h"
 #include "crud-app-win.h"
 #include "crud-app.h"
 
@@ -5,6 +6,29 @@ struct _CrudApp
 {
   GtkApplication parent;
 };
+
+static guint id = 3;
+
+static void
+add_entry(CrudAppWindow *win);
+
+static void
+edit_entry(CrudAppWindow *win);
+
+static void
+delete_entry(CrudAppWindow *win);
+
+static void
+button_clicked(CrudAppWindow *win, gint button_id, gpointer data);
+
+static void
+crud_app_activate(GApplication *self);
+
+static void
+quit_activated(GSimpleAction *action, GVariant *params, gpointer app);
+
+static void
+crud_app_startup(GApplication *self);
 
 G_DEFINE_TYPE(CrudApp, crud_app, GTK_TYPE_APPLICATION)
 
@@ -14,10 +38,144 @@ crud_app_init(CrudApp *self)
 }
 
 static void
+crud_app_class_init(CrudAppClass *klass)
+{
+  G_APPLICATION_CLASS(klass)->startup = crud_app_startup;
+  G_APPLICATION_CLASS(klass)->activate = crud_app_activate;
+}
+
+CrudApp *
+crud_app_new()
+{
+  return g_object_new(CRUD_TYPE_APP, "application-id", "com.yami.crudapp",
+                      NULL);
+}
+
+static void
+button_clicked(CrudAppWindow *win, gint button_id, gpointer data)
+{
+  switch (button_id) {
+    case ADD_BUTTON_CLICKED:
+      add_entry(win);
+      break;
+    case EDIT_BUTTON_CLICKED:
+      edit_entry(win);
+      break;
+    case DELETE_BUTTON_CLICKED:
+      delete_entry(win);
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+add_entry(CrudAppWindow *win)
+{
+  CrudAppDialog *dialog;
+  gint response;
+  gint year;
+  gchararray name, language;
+
+  dialog = crud_app_dialog_new(win);
+
+  gtk_window_present(GTK_WINDOW(dialog));
+
+  response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+  if (response == GTK_RESPONSE_OK) {
+    g_object_get(G_OBJECT(dialog), "entry-name", &name, "entry-year", &year,
+                 "entry-language", &language, NULL);
+
+    g_message("Name: %s, Released: %d, Language: %s", name, year, language);
+
+    crud_app_window_add_to_list(win, id, name, year, language);
+    id++;
+
+    g_free(name);
+    g_free(language);
+  }
+
+  gtk_widget_destroy(GTK_WIDGET(dialog));
+}
+
+static void
+edit_entry(CrudAppWindow *win)
+{
+  CrudAppDialog *dialog;
+  gint response;
+  gint year;
+  gchararray name, language;
+
+  GtkWidget *view;
+  GtkTreeIter iter;
+  GtkTreeModel *store;
+  GtkTreeSelection *selection;
+
+  dialog = crud_app_dialog_new(win);
+
+  view = crud_app_window_get_treeview(win);
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+
+  if (!gtk_tree_selection_get_selected(selection, &store, &iter))
+    return;
+
+  gtk_tree_model_get(store, &iter, NAME, &name, RELEASE, &year, LANGUAGE,
+                     &language, -1);
+
+  g_object_set(G_OBJECT(dialog), "entry-name", name, "entry-year", year,
+               "entry-language", language, NULL);
+  g_free(name);
+  g_free(language);
+
+  gtk_window_present(GTK_WINDOW(dialog));
+
+  response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+  if (response == GTK_RESPONSE_OK) {
+    g_object_get(G_OBJECT(dialog), "entry-name", &name, "entry-year", &year,
+                 "entry-language", &language, NULL);
+
+    gtk_list_store_set(GTK_LIST_STORE(store), &iter, NAME, name, RELEASE, year,
+                       LANGUAGE, language, -1);
+
+    g_free(name);
+    g_free(language);
+  }
+
+  gtk_widget_destroy(GTK_WIDGET(dialog));
+}
+
+static void
+delete_entry(CrudAppWindow *win)
+{
+  GtkWidget *view;
+  GtkTreeIter iter;
+  GtkTreeModel *store;
+  GtkTreeSelection *selection;
+
+  view = crud_app_window_get_treeview(win);
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+
+  if (!gtk_tree_selection_get_selected(selection, &store, &iter))
+    return;
+
+  gtk_list_store_remove(GTK_LIST_STORE(store), &iter);
+}
+
+static void
 crud_app_activate(GApplication *self)
 {
   CrudAppWindow *win;
   win = crud_app_window_new(CRUD_APP(self));
+
+  g_signal_connect(win, "add_button_clicked", G_CALLBACK(button_clicked), NULL);
+  g_signal_connect(win, "edit_button_clicked", G_CALLBACK(button_clicked),
+                   NULL);
+  g_signal_connect(win, "delete_button_clicked", G_CALLBACK(button_clicked),
+                   NULL);
 
   gtk_window_present(GTK_WINDOW(win));
 }
@@ -53,18 +211,4 @@ crud_app_startup(GApplication *self)
   gtk_application_set_app_menu(GTK_APPLICATION(self), G_MENU_MODEL(app_menu));
 
   g_object_unref(builder);
-}
-
-static void
-crud_app_class_init(CrudAppClass *klass)
-{
-  G_APPLICATION_CLASS(klass)->startup = crud_app_startup;
-  G_APPLICATION_CLASS(klass)->activate = crud_app_activate;
-}
-
-CrudApp *
-crud_app_new()
-{
-  return g_object_new(CRUD_TYPE_APP, "application-id", "com.yami.crudapp",
-                      NULL);
 }
