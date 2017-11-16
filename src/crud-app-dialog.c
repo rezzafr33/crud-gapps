@@ -42,6 +42,9 @@ crud_app_dialog_get_property(GObject *obj,
 static void
 on_entry_changed(GtkEditable *entry, gpointer self);
 
+gboolean
+on_year_keypress(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+
 G_DEFINE_TYPE_WITH_PRIVATE(CrudAppDialog, crud_app_dialog, GTK_TYPE_DIALOG)
 
 static void
@@ -86,6 +89,9 @@ crud_app_dialog_init(CrudAppDialog *self)
                           1, 1);
   gtk_widget_set_visible(label, TRUE);
   gtk_widget_set_visible(priv->language, TRUE);
+
+  g_signal_connect(priv->year, "key-press-event", G_CALLBACK(on_year_keypress),
+                   self);
 
   g_signal_connect(priv->name, "changed", G_CALLBACK(on_entry_changed), self);
   g_signal_connect(priv->year, "changed", G_CALLBACK(on_entry_changed), self);
@@ -208,4 +214,22 @@ on_entry_changed(GtkEditable *entry, gpointer self)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
                                       FALSE);
   }
+}
+
+gboolean
+on_year_keypress(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+  guint key = event->key.keyval;
+
+  if ((key >= GDK_KEY_0 && key <= GDK_KEY_9)
+      || (key >= GDK_KEY_KP_0 && key <= GDK_KEY_KP_9) || (key == GDK_KEY_Left)
+      || (key == GDK_KEY_Right) || (key == GDK_KEY_KP_Left)
+      || (key == GDK_KEY_KP_Right) || (key == GDK_KEY_Tab)
+      || (key == GDK_KEY_BackSpace) || (key == GDK_KEY_Up)
+      || (key == GDK_KEY_Down) || (key == GDK_KEY_KP_Up)
+      || (key == GDK_KEY_KP_Down) || (key == GDK_KEY_Escape)) {
+    return FALSE;
+  }
+
+  return TRUE;
 }
