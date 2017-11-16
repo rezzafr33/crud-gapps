@@ -108,7 +108,6 @@ crud_app_dialog_class_init(CrudAppDialogClass *klass)
   GObjectClass *oclass = G_OBJECT_CLASS(klass);
   G_OBJECT_CLASS(klass)->set_property = crud_app_dialog_set_property;
   G_OBJECT_CLASS(klass)->get_property = crud_app_dialog_get_property;
-  // G_OBJECT_CLASS(klass)->constructed = crud_app_dialog_constructed;
 
   properties[PROP_NAME]
     = g_param_spec_string("entry-name", "Entry Name", "Name of software", NULL,
