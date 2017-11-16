@@ -78,6 +78,7 @@ add_entry(CrudAppWindow *win)
   gchararray name, language;
 
   dialog = crud_app_dialog_new(win);
+  gtk_window_set_title(GTK_WINDOW(dialog), "Add new entry");
 
   gtk_window_present(GTK_WINDOW(dialog));
 
@@ -113,6 +114,7 @@ edit_entry(CrudAppWindow *win)
   GtkTreeSelection *selection;
 
   dialog = crud_app_dialog_new(win);
+  gtk_window_set_title(GTK_WINDOW(dialog), "Edit entry");
 
   view = crud_app_window_get_treeview(win);
 
