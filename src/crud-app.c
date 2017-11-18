@@ -194,13 +194,22 @@ static void
 crud_app_activate(GApplication *self)
 {
   CrudAppWindow *win;
-  win = crud_app_window_new(CRUD_APP(self));
 
-  g_signal_connect(win, "add_button_clicked", G_CALLBACK(button_clicked), NULL);
-  g_signal_connect(win, "edit_button_clicked", G_CALLBACK(button_clicked),
-                   NULL);
-  g_signal_connect(win, "delete_button_clicked", G_CALLBACK(button_clicked),
-                   NULL);
+  g_assert(CRUD_IS_APP(self));
+
+  win
+    = CRUD_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(self)));
+
+  if (win == NULL) {
+    win = crud_app_window_new(CRUD_APP(self));
+
+    g_signal_connect(win, "add_button_clicked", G_CALLBACK(button_clicked),
+                     NULL);
+    g_signal_connect(win, "edit_button_clicked", G_CALLBACK(button_clicked),
+                     NULL);
+    g_signal_connect(win, "delete_button_clicked", G_CALLBACK(button_clicked),
+                     NULL);
+  }
 
   gtk_window_present(GTK_WINDOW(win));
 }
