@@ -45,16 +45,17 @@ crud_app_window_init(CrudAppWindow *self)
   priv = crud_app_window_get_instance_private(CRUD_APP_WINDOW(self));
 
   gtk_window_set_title(GTK_WINDOW(self), "GApps CRUD");
-  gtk_window_set_default_size(GTK_WINDOW(self), 350, 150);
+  gtk_window_set_default_size(GTK_WINDOW(self), 350, 200);
   gtk_container_set_border_width(GTK_CONTAINER(self), 10);
 
   grid = gtk_grid_new();
-  gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
-  gtk_grid_set_row_homogeneous(GTK_GRID(grid), TRUE);
+  gtk_grid_set_column_homogeneous(GTK_GRID(grid), FALSE);
+  gtk_grid_set_row_homogeneous(GTK_GRID(grid), FALSE);
   gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
   gtk_widget_set_visible(grid, TRUE);
 
   sw = gtk_scrolled_window_new(NULL, NULL);
+  gtk_widget_set_hexpand(sw, TRUE);
   gtk_widget_set_vexpand(sw, TRUE);
   gtk_widget_set_visible(sw, TRUE);
 
